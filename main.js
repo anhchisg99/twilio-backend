@@ -39,7 +39,6 @@ app.use(express.json());
 //   res.json({ allowed: true });
 // });
 app.get('/test',(req,res)=>{
-  console.log('a:' ,a);
   res.send('tseting')
   
 })
