@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const createError = require("http-errors");
+const port = process.env.PORT || 3001;
 const {
   jwt: { AccessToken },
 } = require("twilio");
@@ -144,4 +145,4 @@ app.use((err, req, res, next) => {
     message: err.message,
   });
 });
-app.listen(3001, () => console.log("Server running"));
+app.listen(port, () => console.log("Server running"));
