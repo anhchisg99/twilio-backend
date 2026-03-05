@@ -9,7 +9,7 @@ const {
 } = require("twilio");
 const VoiceGrant = AccessToken.VoiceGrant;
 const { createClient } = require("@supabase/supabase-js");
-
+const checkPhoneNumber = require('./utils/checkValid.js')
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
@@ -42,6 +42,7 @@ app.get('/test',(req,res)=>{
   res.send('tseting')
   
 })
+
 app.get("/token", (req, res) => {
   const identity = "web-user";
 
@@ -62,6 +63,16 @@ app.get("/token", (req, res) => {
   res.json({ token: token.toJwt() });
 });
 // TwiML endpoint
+app.post('/valid-phone',async (req,res,next)=>{
+  console.log(req.body);
+  const {phoneNumber} = req.body
+  const isValid = await checkPhoneNumber(phoneNumber)
+  if(!isValid){
+    return next(createError(401,'phone is not valid'))
+
+  }
+  res.send({isValid:true})
+})
 app.post("/voice", async (req, res, next) => {
   const to = req.body.To;
   const userId = req.body.userId;
@@ -138,6 +149,7 @@ app.post("/dial-status", async (req, res,next) => {
 
   res.sendStatus(200);
 });
+
 app.use((err, req, res, next) => {
   res.json({
     status: err.status || 500,
