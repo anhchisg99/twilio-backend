@@ -93,7 +93,7 @@ app.post("/voice", async (req, res, next) => {
   const availableSecond = Math.round(availableMinute*60)
   //   const secondsAllowed = Math.floor((user.balance / rate) * 60);
   console.log("second: ", availableSecond);
-  if (availableMinute <= 0) {
+  if (availableSecond <= 10) {
     return next(createError(401, "not please deposit money"));
   }
   const actionUrl = `/dial-status?userId=${userId}&amp;to=${to}`;
