@@ -9,7 +9,7 @@ const {
 } = require("twilio");
 const VoiceGrant = AccessToken.VoiceGrant;
 const { createClient } = require("@supabase/supabase-js");
-const checkPhoneNumber = require('./utils/checkValid.js')
+const checkPhoneNumber = require("./utils/checkValid.js");
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
@@ -38,10 +38,9 @@ app.use(express.json());
 
 //   res.json({ allowed: true });
 // });
-app.get('/test',(req,res)=>{
-  res.send('tseting')
-  
-})
+app.get("/test", (req, res) => {
+  res.send("tseting");
+});
 
 app.get("/token", (req, res) => {
   const identity = "web-user";
@@ -63,21 +62,20 @@ app.get("/token", (req, res) => {
   res.json({ token: token.toJwt() });
 });
 // TwiML endpoint
-app.post('/valid-phone',async (req,res,next)=>{
+app.post("/valid-phone", async (req, res, next) => {
   console.log(req.body);
-  const {phoneNumber} = req.body
-  const isValid = await checkPhoneNumber(phoneNumber)
-  if(!isValid){
-    return next(createError(401,'phone is not valid'))
-
+  const { phoneNumber } = req.body;
+  const isValid = await checkPhoneNumber(phoneNumber);
+  if (!isValid) {
+    return next(createError(401, "phone is not valid"));
   }
-  res.send({isValid:true})
-})
+  res.send({ isValid: true });
+});
 app.post("/voice", async (req, res, next) => {
   const to = req.body.To;
   const userId = req.body.userId;
-  if(!to || !userId){
-    return next(createError(401,'please,fill in userId'))
+  if (!to || !userId) {
+    return next(createError(401, "please,fill in userId"));
   }
   const supabase = await createClient(supabaseUrl, supabaseKey);
 
@@ -87,22 +85,23 @@ app.post("/voice", async (req, res, next) => {
     .eq("mail", userId)
     .single();
   if (error) {
-    return next(createError(401,'error in request user'))
+    return next(createError(401, "error in request user"));
   }
 
-  const timePerMinute= 10 //cent
-  const availableMinute = Math.round(user?.balance / timePerMinute)
+  const timePerMinute =25; //cent
+  const availableMinute = (user?.balance / timePerMinute);
+  const availableSecond = Math.round(availableMinute*60)
   //   const secondsAllowed = Math.floor((user.balance / rate) * 60);
-  console.log("second: ", availableMinute);
-  if(availableMinute <= 0){
-    return next(createError(401,'not please deposit money'))
+  console.log("second: ", availableSecond);
+  if (availableMinute <= 0) {
+    return next(createError(401, "not please deposit money"));
   }
   const actionUrl = `/dial-status?userId=${userId}&amp;to=${to}`;
   res.type("text/xml");
 
   res.send(`  
     <Response>
-      <Dial callerId="${process.env.TWILIO_PHONE_NUMBER}" timeLimit="${availableMinute}"  action="${actionUrl}">
+      <Dial callerId="${process.env.TWILIO_PHONE_NUMBER}" timeLimit="${availableSecond}"  action="${actionUrl}">
         ${to}
       </Dial>
     </Response>
@@ -124,12 +123,16 @@ async function minusMoney(amount, userId) {
     }
   }
 }
-app.post("/dial-status", async (req, res,next) => {
+app.post("/dial-status", async (req, res, next) => {
   const duration = parseInt(req.body.DialCallDuration || 0);
+  if (duration == 0) {
+    return res.sendStatus(200);
+  }
   const userId = req.query.userId;
   // const to = req.query.to;
   console.log("duration: ", duration);
-  const ratePerMinute = 25
+  const ratePerMinute = 25;
+
   const cost = (duration / 60) * ratePerMinute;
 
   //get current balance
@@ -141,10 +144,10 @@ app.post("/dial-status", async (req, res,next) => {
     .eq("mail", userId)
     .single();
   if (error) {
-    return next(createError(401,error))
+    return next(createError(401, error));
   }
   const balance = user?.balance;
-  const surplus = balance - cost ;
+  const surplus = balance - cost;
   await minusMoney(surplus, userId);
 
   res.sendStatus(200);
