@@ -129,7 +129,7 @@ app.post("/dial-status", async (req, res,next) => {
   const userId = req.query.userId;
   // const to = req.query.to;
   console.log("duration: ", duration);
-  const ratePerMinute = 10
+  const ratePerMinute = 25
   const cost = (duration / 60) * ratePerMinute;
 
   //get current balance
